@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ভিডিও কল অ্যাপ</title>
+</head>
+<body>
+
+    <h2>ভিডিও কল রুম</h2>
+    
+    <!-- নিজের ভিডিও (স্ক্রিনে ছোট করে রাখার জন্য) -->
+    <video id="myVideo" autoplay playsinline muted width="150"></video>
+    
+    <!-- অন্য প্রান্তের ভিডিও -->
+    <video id="remoteVideo" autoplay playsinline width="400"></video>
+
+    <br><br>
+    <button id="joinBtn">কল যুক্ত করুন / রিসিভ করুন</button>
+    <p id="status">স্ট্যাটাস: অপেক্ষা করা হচ্ছে...</p>
+
+    <!-- PeerJS লাইব্রেরি যুক্ত করা -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script>
+        const myVideo = document.getElementById('myVideo');
+        const remoteVideo = document.getElementById('remoteVideo');
+        const joinBtn = document.getElementById('joinBtn');
+        const status = document.getElementById('status');
+
+        // পিয়ার আইডি তৈরি
+        const peer = new Peer();
+
+        peer.on('open', function(id) {
+            status.innerText = "আপনার আইডি: " + id;
+        });
+
+        // কল রিসিভ ও শুরু করার লজিক
+        joinBtn.addEventListener('click', function() {
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                .then(function(stream) {
+                    myVideo.srcObject = stream;
+                    status.innerText = "কলে যুক্ত হয়েছেন";
+
+                    // অন্য প্রান্ত থেকে কল এলে রিসিভ করা
+                    peer.on('call', function(call) {
+                        call.answer(stream);
+                        call.on('stream', function(remoteStream) {
+                            remoteVideo.srcObject = remoteStream;
+                        });
+                    });
+                })
+                .catch(function(err) {
+                    status.innerText = "ক্যামেরার পারমিশন দেওয়া হয়নি!";
+                });
+        });
+    </script>
+
+</body>
+</html>
